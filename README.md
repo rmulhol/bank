@@ -84,6 +84,9 @@ class MyCollection < Depository::Collection
 
   # equivalent: pass a symbol
   use_db :books
+
+  # use a Sequel dataset with a constraint
+  use_db Depository::Database[:books].where(:archived => false)
 end
 ```
 

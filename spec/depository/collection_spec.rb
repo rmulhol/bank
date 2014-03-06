@@ -49,11 +49,18 @@ describe Depository::Collection do
     collection.find(saved_model.id).name.should == "new-name"
   end
 
-  it "uses a DB if passed a DB" do
-    collection.use_db(Depository::Database[:people])
+  it "can use a scoped dataset as db" do
+    unscoped_model = collection.save(model.new(:name => "another-name"))
+
+    collection.use_db(Depository::Database[:people].where(:name => "a-name"))
 
     saved_model = collection.save(model.new(:name => "a-name"))
-    saved_model.id.should_not be_nil
+
+    collection.find(saved_model.id).should == saved_model
+
+    expect {
+      collection.find(unscoped_model.id)
+    }.to raise_error(Depository::RecordNotFound)
   end
 
   describe "querying" do
