@@ -1,9 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'rake'
-gem 'sequel'
-gem 'attr_protected'
+gemspec
 
-group :development, :test do
-  gem 'rspec'
-end
+gem 'sqlite3'
