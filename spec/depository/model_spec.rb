@@ -39,11 +39,6 @@ describe Depository::Model do
     }
   end
 
-  it "#to_hash excludes unset attributes" do
-    person = model_class.new(:name => "name")
-    person.to_hash.should == { :name => "name" }
-  end
-
   it "is equal to other objects of the same type with the same attributes" do
     person1 = model_class.new(:name => "name", :age => 42)
     person2 = model_class.new(:name => "name", :age => 42)

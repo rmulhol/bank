@@ -1,11 +1,10 @@
 require 'rubygems/package_task'
 
-pkg_name    = "depository"
-pkg_version = "0.1.1"
+VERSION     = "0.1.1"
 
 spec = Gem::Specification.new do |s|
-  s.name         = pkg_name
-  s.version      = pkg_version
+  s.name         = "depository"
+  s.version      = VERSION
   s.summary      = "simple interface for persistence built on Sequel"
   s.description  = "wraps Sequel to provide a non-ORM data-mapping interface"
 

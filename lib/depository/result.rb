@@ -43,7 +43,7 @@ module Depository
     end
 
     def ==(other)
-      all == other
+      self.all == other
     end
     alias_method :eql?, :==
 

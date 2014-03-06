@@ -2,38 +2,11 @@ require 'attr_protected'
 require 'forwardable'
 
 require 'depository/sequel'
+require 'depository/collection_config'
 
 module Depository
-  RecordNotFound        = Class.new(StandardError)
-  UnknownConversionType = Class.new(StandardError)
-
-  class CollectionConfig
-    attr_protected :_model_block
-
-    def model(&block)
-      if block_given?
-        self._model_block = block
-      else
-        @_model ||= _model_block.call
-      end
-    end
-
-    def db(value = nil)
-      if value
-        @_db = value.is_a?(Symbol) ? Database[value] : value
-      else
-        @_db
-      end
-    end
-
-    def primary_key(value = nil)
-      if value
-        @_primary_key = value
-      else
-        @_primary_key ||= :id
-      end
-    end
-  end
+  RecordNotFound        = Class.new(RuntimeError)
+  UnknownConversionType = Class.new(RuntimeError)
 
   class Collection
     class << self
@@ -49,20 +22,44 @@ module Depository
         Result.new(config.db, self)
       end
 
+      def scope(name, blk)
+        define_singleton_method(name) { |*args| instance_exec *args, &blk }
+      end
+
+      def find_by(key, value)
+        where(key => value).first
+      end
+
       def save(model)
         if model.send(config.primary_key)
-          update(model.to_hash)
+          db.where(config.primary_key => model.send(config.primary_key)).
+            update(model.to_hash)
         else
-          model.send(:"#{config.primary_key}=", insert(model.to_hash))
-          return model
+          model.send(:"#{config.primary_key}=", db.insert(model.to_hash))
         end
+
+        return model
+      end
+
+      def create(attrs)
+        save(config.model.new(attrs))
+      end
+
+      def update(*args, &blk)
+        model = find(*args)
+
+        blk.call(model)
+        save(model)
+        model
       end
 
       def find(key)
-        result = where(config.primary_key => key).first
-        return result if !result.nil?
+        result = key.nil? ? nil : where(config.primary_key => key).first
+
         raise RecordNotFound,
-          "no record found in collection with id `#{key}'"
+          "no record found in collection with id `#{key.inspect}'" if result.nil?
+
+        return result
       end
 
       def delete(key)

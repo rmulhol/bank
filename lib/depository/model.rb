@@ -23,7 +23,7 @@ module Depository
       end
     end
 
-    def initialize(attrs)
+    def initialize(attrs = {})
       set(attrs)
       _defaults.each { |key, val| set(key, val) if !get(key) }
     end
@@ -31,7 +31,7 @@ module Depository
     def to_hash
       _fields.reduce({}) do |acc, field|
         acc.merge(field => get(field))
-      end.reject { |key, val| val.nil? }
+      end
     end
 
     def get(attr)
@@ -44,13 +44,15 @@ module Depository
       else
         public_send(:"#{attr}=", value)
       end
+
+      return self
     end
 
     def ==(other)
       other.is_a?(self.class) && other.to_hash == to_hash
     end
 
-    private
+  private
 
     def _fields
       self.class._fields

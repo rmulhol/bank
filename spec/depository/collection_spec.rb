@@ -5,8 +5,16 @@ require 'depository/collection'
 require 'depository/model'
 
 describe Depository::Collection do
-  let(:collection) { Class.new(Depository::Collection) }
-  let(:model) { Class.new(Depository::Model) { fields :name, :age, :id }}
+  model = Class.new(Depository::Model) { fields :name, :age, :id, :account_id }
+
+  let(:collection) {
+    Class.new(Depository::Collection) do
+      config.db { :people }
+      config.model { model }
+      config.primary_key :id
+    end
+  }
+
   let(:db) { Sequel.sqlite }
 
   before do
@@ -15,6 +23,7 @@ describe Depository::Collection do
 
       String :name
       Integer :age
+      Integer :account_id
     end
 
     db.create_table :pets do
@@ -29,10 +38,6 @@ describe Depository::Collection do
     end
 
     Depository::Database.use_db(db)
-
-    collection.config.primary_key(:id)
-    collection.config.model { model }
-    collection.config.db :people
   end
 
   it "saves a model" do
@@ -54,7 +59,7 @@ describe Depository::Collection do
   it "can use a scoped dataset as db" do
     unscoped_model = collection.save(model.new(:name => "another-name"))
 
-    collection.config.db(Depository::Database[:people].where(:name => "a-name"))
+    collection.config.db { Depository::Database[:people].where(:name => "a-name") }
 
     saved_model = collection.save(model.new(:name => "a-name"))
 
@@ -78,6 +83,12 @@ describe Depository::Collection do
       it "raises RecordNotFound if the record does not exist" do
         expect {
           collection.find("some-key")
+        }.to raise_error(Depository::RecordNotFound)
+      end
+
+      it "raises RecordNotFound if the key is nil" do
+        expect {
+          collection.find(nil)
         }.to raise_error(Depository::RecordNotFound)
       end
     end
@@ -117,6 +128,24 @@ describe Depository::Collection do
     end
   end
 
+  describe "scope" do
+    it "creates a method on the collection" do
+      person = collection.create(:age => 42)
+      collection.scope :aged, ->(age) { where(:age => age) }
+
+      collection.aged(42).should == [person]
+    end
+  end
+
+  describe "find_by" do
+    it "returns the first result for matching records" do
+      person = collection.create(:name => "name")
+      person2 = collection.create(:name => "name")
+
+      collection.find_by(:name, "name").should == person
+    end
+  end
+
   describe "delete" do
     it "removes the record from the database" do
       saved_model = collection.save(model.new(:name => "a-name"))
@@ -128,6 +157,18 @@ describe Depository::Collection do
       expect {
         collection.find(saved_model.id)
       }.to raise_error(Depository::RecordNotFound)
+    end
+  end
+
+  describe "update" do
+    it "updates the correct model" do
+      saved = collection.create(:name => "first-name")
+      collection.update(saved.id) do |model|
+        model.should == saved
+        model.name = "second-name"
+      end
+
+      collection.find(saved.id).name.should == "second-name"
     end
   end
 
