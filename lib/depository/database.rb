@@ -11,10 +11,6 @@ module Depository
         self.db = db
       end
 
-      def db_for(collection)
-        Result.new(self.db[collection._db_name], collection)
-      end
-
       def [](name)
         self.db[name]
       end

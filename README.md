@@ -32,8 +32,8 @@ class Book < Depository::Model
 end
 
 class BooksCollection < Depository::Collection
-  use_model { MyModel }
-  use_db :books  # points to 'books' table created above
+  config.model { MyModel }
+  config.db :books  # points to 'books' table created above
 
   def self.by_author(author)
     where(:author_id => author.id)
@@ -81,20 +81,20 @@ name of a table, and the Collection will use the corresponding dataset by defaul
 ```ruby
 class MyCollection < Depository::Collection
   # use a Sequel dataset directly
-  use_db Depository::Database[:books]
+  config.db Depository::Database[:books]
 
   # equivalent: pass a symbol
-  use_db :books
+  config.db :books
 
   # use a Sequel dataset with a constraint
-  use_db Depository::Database[:books].where(:archived => false)
+  config.db Depository::Database[:books].where(:archived => false)
 end
 ```
 
 You can specify a primary_key, which is defaulted to `:id`
 ```ruby
 class MyCollection < Depository::Collection
-  primary_key = :key
+  config.primary_key :key
 end
 ```
 
@@ -103,7 +103,7 @@ for conversion of results.
 
 ```ruby
 class MyCollection < Depository::Collection
-  use_model { MyModel }
+  config.model { MyModel }
 end
 ```
 

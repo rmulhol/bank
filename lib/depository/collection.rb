@@ -7,56 +7,66 @@ module Depository
   RecordNotFound        = Class.new(StandardError)
   UnknownConversionType = Class.new(StandardError)
 
+  class CollectionConfig
+    attr_protected :_model_block
+
+    def model(&block)
+      if block_given?
+        self._model_block = block
+      else
+        @_model ||= _model_block.call
+      end
+    end
+
+    def db(value = nil)
+      if value
+        @_db = value.is_a?(Symbol) ? Database[value] : value
+      else
+        @_db
+      end
+    end
+
+    def primary_key(value = nil)
+      if value
+        @_primary_key = value
+      else
+        @_primary_key ||= :id
+      end
+    end
+  end
+
   class Collection
     class << self
-      attr_protected :_model_block, :_model_class, :_db_name
-
       extend Forwardable
 
       def_delegators :db, *DatasetMethods
 
-      def use_model(&block)
-        self._model_block = block
-      end
-
-      def _model
-        self._model_class ||= _model_block.call
-      end
-
-      def use_db(db)
-        db.is_a?(Symbol) ? self._db_name = db : @_db = Result.new(db, self)
+      def config
+        @_config ||= CollectionConfig.new
       end
 
       def db
-        @_db ||= Result.new(Database[_db_name], self)
-      end
-
-      def primary_key
-        @_primary_key ||= :id
-      end
-
-      def primary_key=(key)
-        @_primary_key = key
+        Result.new(config.db, self)
       end
 
       def save(model)
-        if model.send(primary_key)
+        if model.send(config.primary_key)
           update(model.to_hash)
         else
-          model.send(:"#{primary_key}=", insert(model.to_hash))
+          model.send(:"#{config.primary_key}=", insert(model.to_hash))
           return model
         end
       end
 
       def find(key)
-        result = where(primary_key => key).first
+        result = where(config.primary_key => key).first
         return result if !result.nil?
         raise RecordNotFound,
-          "no record found in collection `#{_db_name}' with id `#{key}'"
+          "no record found in collection with id `#{key}'"
       end
 
       def delete(key)
-        db.where(primary_key => key).delete
+        db.where(config.primary_key => key).delete
       end
 
       def convert(attrs)
@@ -64,7 +74,7 @@ module Depository
         when Array
           attrs.map(&method(:convert))
         when Hash
-          _model.new(attrs)
+          config.model.new(attrs)
         else
           raise UnknownConversionType, "unable to convert #{attrs.inspect}"
         end

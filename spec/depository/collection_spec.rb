@@ -29,8 +29,10 @@ describe Depository::Collection do
     end
 
     Depository::Database.use_db(db)
-    collection.use_model { model }
-    collection.use_db :people
+
+    collection.config.primary_key(:id)
+    collection.config.model { model }
+    collection.config.db :people
   end
 
   it "saves a model" do
@@ -52,7 +54,7 @@ describe Depository::Collection do
   it "can use a scoped dataset as db" do
     unscoped_model = collection.save(model.new(:name => "another-name"))
 
-    collection.use_db(Depository::Database[:people].where(:name => "a-name"))
+    collection.config.db(Depository::Database[:people].where(:name => "a-name"))
 
     saved_model = collection.save(model.new(:name => "a-name"))
 
