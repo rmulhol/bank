@@ -62,7 +62,8 @@ Depository::Database[:books]
 ```
 
 ## Collections
-Collections represent the interface to persistence. They wrap Sequel datasets,
+Collections represent the interface to persistence. They wrap
+[Sequel datasets](http://sequel.jeremyevans.net/rdoc/files/doc/dataset_basics_rdoc.html),
 which lazily construct queries, and then convert the queries to the configured
 model class when the query is evaluated. Collections implement most everything a
 Sequel dataset does, plus they contain support for Enumerable.
@@ -70,7 +71,7 @@ Sequel dataset does, plus they contain support for Enumerable.
 Beyond that, Collections basically implement only 3 methods:
 * `save(model)` - persist a new or existing record to the database
 * `find(primary_key)` - fetch a record from the database
-* `delete(primary_key)` - remove a record from the database
+* `delete(primary_key)` -  remove a record from the database
 
 ### Configuring Collections
 Collections are configured with a top-level dataset object, under which all
