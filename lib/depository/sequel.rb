@@ -11,7 +11,7 @@ module Depository
         :order_append, :order_prepend, :order_more, :reverse, :reverse_order,
         :unordered, :limit, :offset, :unlimited, :union, :intersect, :except,
         :for_update, :lock_style, :with, :with_recursive, :clone, :distinct,
-        :naked, :qualify, :server, :with_sql,
+        :naked, :qualify, :server, :with_sql, :count,
         :insert, :update, :delete, :max, :min]
 
 end

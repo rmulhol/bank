@@ -59,10 +59,6 @@ module Depository
         db.where(primary_key => key).delete
       end
 
-      def count
-        db.count
-      end
-
       def convert(attrs)
         case attrs
         when Array
