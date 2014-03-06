@@ -21,8 +21,9 @@ data-structures that wrap query results.
 db = Sequel.sqlite # requires 'sqlite3' gem, not included
 Depository::Database.use_db(db)
 
-db.create_table(:books) do |table|
+db.create_table(:books) do
   primary_key :id
+
   String :title
   Integer :author_id
 end
