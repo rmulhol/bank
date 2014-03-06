@@ -23,12 +23,12 @@ module Depository
         self._model_class ||= _model_block.call
       end
 
-      def use_db(db_name)
-        self._db_name = db_name
+      def use_db(db)
+        db.is_a?(Symbol) ? self._db_name = db : @_db = Result.new(db, self)
       end
 
       def db
-        Depository::Database.db_for(self)
+        @_db ||= Result.new(Database[_db_name], self)
       end
 
       def primary_key

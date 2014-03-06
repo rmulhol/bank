@@ -49,6 +49,13 @@ describe Depository::Collection do
     collection.find(saved_model.id).name.should == "new-name"
   end
 
+  it "uses a DB if passed a DB" do
+    collection.use_db(Depository::Database[:people])
+
+    saved_model = collection.save(model.new(:name => "a-name"))
+    saved_model.id.should_not be_nil
+  end
+
   describe "querying" do
     let!(:saved_model) { collection.save(model.new(:name => "a-name", :age => 42)) }
     let!(:saved_model2) { collection.save(model.new(:name => "diff-name", :age => 22)) }
