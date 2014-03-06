@@ -60,7 +60,7 @@ module Depository
       end
 
       def count
-        db.raw.size
+        db.count
       end
 
       def convert(attrs)
