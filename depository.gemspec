@@ -7,7 +7,9 @@ spec = Gem::Specification.new do |s|
   s.name         = pkg_name
   s.version      = pkg_version
   s.summary      = "simple interface for persistence built on Sequel"
-  s.description  = "simple interface for persistence built on Sequel"
+  s.description  = "wraps Sequel to provide a non-ORM data-mapping interface"
+
+  s.license      = 'WTFPL'
 
   s.files        = Dir.glob('lib/depository/*.rb')
   s.require_path = 'lib'
@@ -18,9 +20,9 @@ spec = Gem::Specification.new do |s|
   s.email        = "brian@8thlight.com"
   s.homepage     = "http://8thlight.com"
 
-  s.add_runtime_dependency 'sequel', '~> 4.7.0'
-  s.add_runtime_dependency 'attr_protected', '~> 1.0.0'
+  s.add_runtime_dependency 'sequel', '~> 4.7', '>= 4.7.0'
+  s.add_runtime_dependency 'attr_protected', '~> 1.0', '>= 1.0.0'
 
-  s.add_development_dependency 'rake', '~> 10.1.1'
-  s.add_development_dependency 'rspec', '~> 2.14.1'
+  s.add_development_dependency 'rake', '~> 10.1', '>= 10.1.1'
+  s.add_development_dependency 'rspec', '~> 2.14', '>= 2.14.1'
 end
