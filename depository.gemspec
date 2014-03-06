@@ -1,7 +1,7 @@
 require 'rubygems/package_task'
 
 pkg_name    = "depository"
-pkg_version = "0.1.0"
+pkg_version = "0.1.1"
 
 spec = Gem::Specification.new do |s|
   s.name         = pkg_name
@@ -18,7 +18,7 @@ spec = Gem::Specification.new do |s|
 
   s.author       = "Brian Pratt"
   s.email        = "brian@8thlight.com"
-  s.homepage     = "http://8thlight.com"
+  s.homepage     = "https://github.com/pratt121/depository"
 
   s.add_runtime_dependency 'sequel', '~> 4.7', '>= 4.7.0'
   s.add_runtime_dependency 'attr_protected', '~> 1.0', '>= 1.0.0'
