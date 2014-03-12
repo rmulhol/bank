@@ -1,4 +1,4 @@
-require 'sequel'
+require 'sequel/core'
 require 'yaml'
 
 require 'depository/database'
@@ -60,6 +60,13 @@ describe Depository::Collection do
       saved_model = collection.save(model.new(:name => "a-name"))
       saved_model.id.should_not be_nil
       saved_model.hash.should == {}
+    end
+
+    it "coerces string params to integers if need be" do
+      saved_model = collection.create(:age => "50")
+
+      saved_model.age.should be_a(Integer)
+      saved_model.age.should == 50
     end
 
     it "sets a created_at on create" do

@@ -3,6 +3,7 @@ require 'forwardable'
 
 require 'depository/sequel'
 require 'depository/collection_config'
+require 'depository/serialize'
 
 module Depository
   RecordNotFound        = Class.new(RuntimeError)
@@ -31,19 +32,13 @@ module Depository
       end
 
       def save(model)
-        if model.send(config.primary_key)
-          model.updated_at = Time.now if model.respond_to?(:updated_at=)
+        pkey = config.primary_key
 
-          db.where(config.primary_key => model.send(config.primary_key)).
-            update(pack(model.to_hash))
+        if new?(model)
+          model.send(:"#{pkey}=", db.insert(Serialize.pack(config, model)))
         else
-          time = Time.now
-
-          [:created_at=, :updated_at=].each do |stamp|
-             model.send(stamp, time) if model.respond_to?(stamp)
-          end
-
-          model.send(:"#{config.primary_key}=", db.insert(pack(model.to_hash)))
+          db.where(pkey => model.send(pkey)).
+            update(Serialize.pack(config, model))
         end
 
         return model
@@ -79,20 +74,16 @@ module Depository
         when Array
           attrs.map(&method(:convert))
         when Hash
-          config.model.new(unpack(attrs))
+          config.model.new(Serialize.unpack(config, attrs))
         else
           raise UnknownConversionType, "unable to convert #{attrs.inspect}"
         end
       end
 
-      def pack(attrs)
-        config.packer.call(attrs)
-        attrs
-      end
+    private
 
-      def unpack(attrs)
-        config.unpacker.call(attrs)
-        attrs
+      def new?(model)
+        model.send(config.primary_key).nil?
       end
     end
   end
