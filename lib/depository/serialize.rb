@@ -40,10 +40,8 @@ module Depository
         attrs = attrs.dup
 
         Depository::Database.db.schema(config.db).reject { |column, opts|
-          attrs[column].nil?
-        }.each do |column, opts|
-          attrs[column] = attrs[column].to_i if opts[:type] == :integer
-        end
+          attrs[column].nil? || opts[:type] != :integer
+        }.each { |column, opts| attrs[column] = attrs[column].to_i }
 
         attrs
       end

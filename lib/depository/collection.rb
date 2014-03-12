@@ -80,6 +80,10 @@ module Depository
         end
       end
 
+      def join_as(table, *args, &blk)
+        select(*config.model._fields.map { |f| :"#{table}__#{f}"}).join(*args, &blk)
+      end
+
     private
 
       def new?(model)

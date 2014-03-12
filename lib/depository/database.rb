@@ -7,6 +7,10 @@ module Depository
     class << self
       attr_protected :db
 
+      def self.db
+        dp.dup
+      end
+
       def use_db(db)
         self.db = db
       end
