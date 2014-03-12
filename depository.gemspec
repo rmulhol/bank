@@ -1,6 +1,6 @@
 require 'rubygems/package_task'
 
-VERSION     = "0.1.3"
+VERSION     = "0.1.4"
 
 spec = Gem::Specification.new do |s|
   s.name         = "depository"
