@@ -1,17 +1,29 @@
 require 'sequel'
+require 'yaml'
 
 require 'depository/database'
 require 'depository/collection'
 require 'depository/model'
 
 describe Depository::Collection do
-  model = Class.new(Depository::Model) { fields :name, :age, :id, :account_id }
+  model = Class.new(Depository::Model) {
+    fields :name, :age, :id, :hash, :created_at, :updated_at
+    defaults :hash => {}
+  }
 
   let(:collection) {
     Class.new(Depository::Collection) do
       config.db { :people }
       config.model { model }
       config.primary_key :id
+
+      config.packer = ->(attrs) {
+        attrs[:hash] = YAML.dump(attrs.fetch(:hash, {}))
+      }
+
+      config.unpacker = ->(attrs) {
+        attrs[:hash] = YAML.load(attrs.fetch(:hash, ""))
+      }
     end
   }
 
@@ -22,8 +34,11 @@ describe Depository::Collection do
       primary_key :id
 
       String :name
+      String :hash, :text => true
       Integer :age
-      Integer :account_id
+
+      DateTime :created_at
+      DateTime :updated_at
     end
 
     db.create_table :pets do
@@ -40,34 +55,65 @@ describe Depository::Collection do
     Depository::Database.use_db(db)
   end
 
-  it "saves a model" do
-    saved_model = collection.save(model.new(:name => "a-name"))
-    saved_model.id.should_not be_nil
-  end
+  describe "save" do
+    it "saves a new model" do
+      saved_model = collection.save(model.new(:name => "a-name"))
+      saved_model.id.should_not be_nil
+      saved_model.hash.should == {}
+    end
 
-  it "updates a previously saved model" do
-    saved_model = collection.save(model.new(:name => "a-name"))
-    saved_model.name = "new-name"
+    it "sets a created_at on create" do
+      now = Time.now
+      Time.stub(:now) { now }
 
-    expect {
+      saved_model = collection.create(:name => "a-name")
+      saved_model.created_at.should == now
+    end
+
+    it "saves a previously saved model" do
+      saved_model = collection.save(model.new(:name => "a-name"))
+      saved_model.name = "new-name"
+
+      expect {
+        collection.save(saved_model)
+      }.not_to change { collection.count }
+
+      collection.find(saved_model.id).name.should == "new-name"
+    end
+
+    it "sets updated_at on save" do
+      now = Time.now
+      Time.stub(:now) { now }
+
+      saved_model = collection.create(:name => "a-name")
+      saved_model.created_at.should == now
+
+      saved_model.name = "new-name"
       collection.save(saved_model)
-    }.not_to change { collection.count }
 
-    collection.find(saved_model.id).name.should == "new-name"
+      saved_model.updated_at.should == now
+    end
   end
 
-  it "can use a scoped dataset as db" do
-    unscoped_model = collection.save(model.new(:name => "another-name"))
+  describe "db" do
+    it "uses the db set in the config" do
+      mock_db = double.as_null_object
+      collection.config.db { mock_db }
+      collection.config.db.should == mock_db
+    end
 
-    collection.config.db { Depository::Database[:people].where(:name => "a-name") }
+    it "can use a scoped dataset as db" do
+      unscoped_model = collection.save(model.new(:name => "another-name"))
+      collection.config.db { Depository::Database[:people].where(:name => "a-name") }
 
-    saved_model = collection.save(model.new(:name => "a-name"))
+      saved_model = collection.save(model.new(:name => "a-name"))
 
-    collection.find(saved_model.id).should == saved_model
+      collection.find(saved_model.id).should == saved_model
 
-    expect {
-      collection.find(unscoped_model.id)
-    }.to raise_error(Depository::RecordNotFound)
+      expect {
+        collection.find(unscoped_model.id)
+      }.to raise_error(Depository::RecordNotFound)
+    end
   end
 
   describe "querying" do
@@ -172,37 +218,10 @@ describe Depository::Collection do
     end
   end
 
-  describe "order" do
-    it "retrieves models in the order provided" do
-      three = collection.save(model.new(:age => 3))
-      two = collection.save(model.new(:age => 2))
-      one = collection.save(model.new(:age => 1))
-
-      collection.where { id < 5 }.order(:age).should == [one, two, three]
-      collection.where { id < 5 }.order(Sequel.desc(:age)).should == [
-        three, two, one
-      ]
-    end
-  end
-
-  describe "max" do
-    it "returns top value in result-set for given column" do
-      three = collection.save(model.new(:age => 3))
-      two = collection.save(model.new(:age => 2))
-      one = collection.save(model.new(:age => 1))
-
-      collection.where { age < 3 }.max(:age).should == 2
-      collection.max(:age).should == 3
-    end
-  end
-
-  describe "limit" do
-    it "constrains results to the first n records" do
-      results = (1...10).to_a.map do |num|
-        collection.save(model.new(:age => num))
-      end
-
-      collection.order(:age).limit(5).should == results.take(5)
+  describe "packer" do
+    it "packs/unpacks models before save/after load" do
+      saved = collection.create(:hash => { :one => 'two' })
+      collection.find(saved.id).hash.should == { :one => 'two' }
     end
   end
 end

@@ -47,6 +47,10 @@ module Depository
     end
     alias_method :eql?, :==
 
+    def inspect
+      all.inspect
+    end
+
   private
 
     def new(db)

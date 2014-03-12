@@ -4,6 +4,7 @@ require 'depository/database'
 module Depository
   class CollectionConfig
     attr_protected :_model_block
+    attr_writer :packer, :unpacker
 
     def model(&block)
       if block_given?
@@ -11,6 +12,14 @@ module Depository
       else
         @_model ||= _model_block.call
       end
+    end
+
+    def packer
+      @packer ||= identity
+    end
+
+    def unpacker
+      @unpacker ||= identity
     end
 
     def db(&block)
@@ -29,6 +38,12 @@ module Depository
       else
         @_primary_key ||= :id
       end
+    end
+
+  private
+
+    def identity
+      ->(i) { i }
     end
   end
 end

@@ -32,10 +32,18 @@ module Depository
 
       def save(model)
         if model.send(config.primary_key)
+          model.updated_at = Time.now if model.respond_to?(:updated_at=)
+
           db.where(config.primary_key => model.send(config.primary_key)).
-            update(model.to_hash)
+            update(pack(model.to_hash))
         else
-          model.send(:"#{config.primary_key}=", db.insert(model.to_hash))
+          time = Time.now
+
+          [:created_at=, :updated_at=].each do |stamp|
+             model.send(stamp, time) if model.respond_to?(stamp)
+          end
+
+          model.send(:"#{config.primary_key}=", db.insert(pack(model.to_hash)))
         end
 
         return model
@@ -71,10 +79,20 @@ module Depository
         when Array
           attrs.map(&method(:convert))
         when Hash
-          config.model.new(attrs)
+          config.model.new(unpack(attrs))
         else
           raise UnknownConversionType, "unable to convert #{attrs.inspect}"
         end
+      end
+
+      def pack(attrs)
+        config.packer.call(attrs)
+        attrs
+      end
+
+      def unpack(attrs)
+        config.unpacker.call(attrs)
+        attrs
       end
     end
   end
