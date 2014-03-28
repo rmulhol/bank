@@ -11,25 +11,9 @@ describe Depository::Collection do
     defaults :hash => {}
   }
 
-  let(:collection) {
-    Class.new(Depository::Collection) do
-      config.db { :people }
-      config.model { model }
-      config.primary_key :id
+  db = Sequel.connect('do:sqlite3::memory:')
 
-      config.packer = ->(attrs) {
-        attrs[:hash] = YAML.dump(attrs.fetch(:hash, {}))
-      }
-
-      config.unpacker = ->(attrs) {
-        attrs[:hash] = YAML.load(attrs.fetch(:hash, ""))
-      }
-    end
-  }
-
-  let(:db) { Sequel.sqlite }
-
-  before do
+  before(:all) do
     db.create_table :people do
       primary_key :id
 
@@ -55,6 +39,26 @@ describe Depository::Collection do
     Depository::Database.use_db(db)
   end
 
+  let(:collection) {
+    Class.new(Depository::Collection) do
+      config.db { :people }
+      config.model { model }
+      config.primary_key :id
+
+      config.packer = ->(attrs) {
+        attrs[:hash] = YAML.dump(attrs.fetch(:hash, {}))
+      }
+
+      config.unpacker = ->(attrs) {
+        attrs[:hash] = YAML.load(attrs.fetch(:hash, ""))
+      }
+    end
+  }
+
+  before do
+    [:people, :pets, :people_pets].each { |table| db[table].delete }
+  end
+
   describe "save" do
     it "saves a new model" do
       saved_model = collection.save(model.new(:name => "a-name"))
@@ -70,7 +74,7 @@ describe Depository::Collection do
     end
 
     it "sets a created_at on create" do
-      now = Time.now
+      now = Time.at(Time.now.to_i)
       Time.stub(:now) { now }
 
       saved_model = collection.create(:name => "a-name")
@@ -89,7 +93,7 @@ describe Depository::Collection do
     end
 
     it "sets updated_at on save" do
-      now = Time.now
+      now = Time.at(Time.now.to_i)
       Time.stub(:now) { now }
 
       saved_model = collection.create(:name => "a-name")

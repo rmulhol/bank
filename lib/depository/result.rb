@@ -11,6 +11,7 @@ module Depository
     attr_protected :db, :collection
 
     def_delegators :db, *[:update, :insert, :delete, :max, :min, :count]
+    def_delegators :all, :inspect, :empty?
 
     def initialize(db, collection)
       self.db = db

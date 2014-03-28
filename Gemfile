@@ -2,4 +2,4 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'sqlite3'
+gem 'do_sqlite3'

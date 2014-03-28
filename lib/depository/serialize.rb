@@ -39,11 +39,15 @@ module Depository
       def normalize(attrs)
         attrs = attrs.dup
 
-        Depository::Database.db.schema(config.db).reject { |column, opts|
-          attrs[column].nil? || opts[:type] != :integer
+        columns.select { |column, opts|
+          !attrs[column].nil? && opts[:type] == :integer
         }.each { |column, opts| attrs[column] = attrs[column].to_i }
 
         attrs
+      end
+
+      def columns
+        Depository::Database.db.schema(config.db)
       end
     end
 
@@ -56,8 +60,36 @@ module Depository
       end
 
       def call
+        columns.select { |column, opts|
+          opts[:type] == :datetime && ![nil, 0].include?(attrs[column])
+        }.each { |column, opts| attrs[column] = drop_usecs(attrs[column]) }
+
+        columns.select { |column, opts|
+          opts[:type] == :date && ![nil, 0].include?(attrs[column])
+        }.each { |column, opts|
+          attrs[column] = Date.parse(attrs[column]) if attrs[column].is_a?(String)
+        }
+
+        columns.select { |column, opts|
+          !attrs[column].nil? && opts[:type] == :boolean
+        }.each { |column, opts| attrs[column] = [1, true].include?(attrs[column]) }
+
         config.unpacker.call(attrs)
         attrs
+      end
+
+      def drop_usecs(time)
+        if time.is_a?(String)
+          Time.at(Time.parse(time).to_i)
+        elsif time.is_a?(DateTime)
+          Time.at(time.to_time.to_i)
+        else
+          Time.at(time.to_i)
+        end
+      end
+
+      def columns
+        Depository::Database.db.schema(config.db)
       end
     end
 
