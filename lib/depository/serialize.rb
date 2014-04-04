@@ -43,11 +43,15 @@ module Depository
           !attrs[column].nil? && opts[:type] == :integer
         }.each { |column, opts| attrs[column] = attrs[column].to_i }
 
+        columns.select { |column, opts|
+          !attrs[column].nil? && opts[:type] == :boolean
+        }.each { |column, opts| attrs[column] = attrs[column] ? 1 : 0 }
+
         attrs
       end
 
       def columns
-        Depository::Database.db.schema(config.db)
+        @columns ||= Depository::Database.db.schema(config.db)
       end
     end
 
@@ -89,7 +93,7 @@ module Depository
       end
 
       def columns
-        Depository::Database.db.schema(config.db)
+        @columns ||= Depository::Database.db.schema(config.db)
       end
     end
 
