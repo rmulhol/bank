@@ -8,7 +8,7 @@ module Depository
       attr_protected :db
 
       def self.db
-        dp.dup
+        db.dup
       end
 
       def use_db(db)
