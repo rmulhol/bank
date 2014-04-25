@@ -1,11 +1,11 @@
 require 'attr_protected'
 require 'forwardable'
 
-require 'depository/sequel'
-require 'depository/collection_config'
-require 'depository/serialize'
+require 'bank/sequel'
+require 'bank/collection_config'
+require 'bank/serialize'
 
-module Depository
+module Bank
   RecordNotFound        = Class.new(RuntimeError)
   UnknownConversionType = Class.new(RuntimeError)
 

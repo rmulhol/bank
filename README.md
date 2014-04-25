@@ -1,6 +1,6 @@
-# Depository
+# Bank
 
-Depository is an attempt at making database
+Bank is an attempt at making database
 abstractions seem more real than they are in raw
 [Sequel](http://sequel.jeremyevans.net),
 without going too far and using a full-on ActiveRecord-style
@@ -19,7 +19,7 @@ data-structures that wrap query results.
 
 ```ruby
 db = Sequel.sqlite # requires 'sqlite3' gem, not included
-Depository::Database.use_db(db)
+Bank::Database.use_db(db)
 
 db.create_table(:books) do
   primary_key :id
@@ -28,11 +28,11 @@ db.create_table(:books) do
   Integer :author_id
 end
 
-class Book < Depository::Model
+class Book < Bank::Model
   fields :id, :title, :author_id
 end
 
-class BooksCollection < Depository::Collection
+class BooksCollection < Bank::Collection
   config.model { MyModel }
   config.db :books  # points to 'books' table created above
 
@@ -50,16 +50,16 @@ BooksCollection.for_author(author) == [book] # => true
 ```
 
 ## Databases
-Depository uses a top-level database singleton. You pass it a Sequel DB object,
+Bank uses a top-level database singleton. You pass it a Sequel DB object,
 and any collections are scoped to that database. See the
 [Sequel Docs](http://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html)
 for more info on creating database connections.
 
 ```ruby
-Depository::Database.use_db(Sequel.sqlite)
+Bank::Database.use_db(Sequel.sqlite)
 
 # query the `books' table directly
-Depository::Database[:books]
+Bank::Database[:books]
 ```
 
 ## Collections
@@ -80,21 +80,21 @@ collection queries are scoped. You can also provide a symbol with the
 name of a table, and the Collection will use the corresponding dataset by default.
 
 ```ruby
-class MyCollection < Depository::Collection
+class MyCollection < Bank::Collection
   # use a Sequel dataset directly
-  config.db Depository::Database[:books]
+  config.db Bank::Database[:books]
 
   # equivalent: pass a symbol
   config.db :books
 
   # use a Sequel dataset with a constraint
-  config.db Depository::Database[:books].where(:archived => false)
+  config.db Bank::Database[:books].where(:archived => false)
 end
 ```
 
 You can specify a primary_key, which is defaulted to `:id`
 ```ruby
-class MyCollection < Depository::Collection
+class MyCollection < Bank::Collection
   config.primary_key :key
 end
 ```
@@ -103,7 +103,7 @@ Lastly, you can set a model class that the collection will use
 for conversion of results.
 
 ```ruby
-class MyCollection < Depository::Collection
+class MyCollection < Bank::Collection
   config.model { MyModel }
 end
 ```
@@ -113,7 +113,7 @@ Models represent single records returned from a query. They are configured
 with a list of fields that correspond to table columns.
 
 ```ruby
-class Person < Depository::Model
+class Person < Bank::Model
   fields :id, :name, :age
 
   defaults :age => 42

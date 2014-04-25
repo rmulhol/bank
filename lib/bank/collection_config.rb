@@ -1,7 +1,7 @@
 require 'attr_protected'
-require 'depository/database'
+require 'bank/database'
 
-module Depository
+module Bank
   class CollectionConfig
     attr_protected :_model_block
     attr_writer :packer, :unpacker

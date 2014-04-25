@@ -1,9 +1,9 @@
 require 'attr_protected'
 require 'forwardable'
 
-require 'depository/sequel'
+require 'bank/sequel'
 
-module Depository
+module Bank
   class Result
     include Enumerable
     extend Forwardable

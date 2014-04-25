@@ -1,4 +1,4 @@
-module Depository
+module Bank
 
   DatasetMethods = [:select, :select_all, :select_append, :select_group,
         :select_more, :join, :left_join, :right_join, :full_join,

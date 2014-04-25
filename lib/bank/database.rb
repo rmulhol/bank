@@ -1,8 +1,8 @@
 require 'attr_protected'
 
-require 'depository/result'
+require 'bank/result'
 
-module Depository
+module Bank
   class Database
     class << self
       attr_protected :db

@@ -1,12 +1,12 @@
 require 'sequel/core'
 require 'yaml'
 
-require 'depository/database'
-require 'depository/collection'
-require 'depository/model'
+require 'bank/database'
+require 'bank/collection'
+require 'bank/model'
 
-describe Depository::Collection do
-  model = Class.new(Depository::Model) {
+describe Bank::Collection do
+  model = Class.new(Bank::Model) {
     fields :name, :age, :id, :hash, :created_at, :updated_at
     defaults :hash => {}
   }
@@ -36,11 +36,11 @@ describe Depository::Collection do
       Integer :pet_id
     end
 
-    Depository::Database.use_db(db)
+    Bank::Database.use_db(db)
   end
 
   let(:collection) {
-    Class.new(Depository::Collection) do
+    Class.new(Bank::Collection) do
       config.db { :people }
       config.model { model }
       config.primary_key :id
@@ -115,7 +115,7 @@ describe Depository::Collection do
 
     it "can use a scoped dataset as db" do
       unscoped_model = collection.save(model.new(:name => "another-name"))
-      collection.config.db { Depository::Database[:people].where(:name => "a-name") }
+      collection.config.db { Bank::Database[:people].where(:name => "a-name") }
 
       saved_model = collection.save(model.new(:name => "a-name"))
 
@@ -123,7 +123,7 @@ describe Depository::Collection do
 
       expect {
         collection.find(unscoped_model.id)
-      }.to raise_error(Depository::RecordNotFound)
+      }.to raise_error(Bank::RecordNotFound)
     end
   end
 
@@ -140,13 +140,13 @@ describe Depository::Collection do
       it "raises RecordNotFound if the record does not exist" do
         expect {
           collection.find("some-key")
-        }.to raise_error(Depository::RecordNotFound)
+        }.to raise_error(Bank::RecordNotFound)
       end
 
       it "raises RecordNotFound if the key is nil" do
         expect {
           collection.find(nil)
-        }.to raise_error(Depository::RecordNotFound)
+        }.to raise_error(Bank::RecordNotFound)
       end
     end
 
@@ -213,7 +213,7 @@ describe Depository::Collection do
 
       expect {
         collection.find(saved_model.id)
-      }.to raise_error(Depository::RecordNotFound)
+      }.to raise_error(Bank::RecordNotFound)
     end
   end
 

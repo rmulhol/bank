@@ -1,6 +1,6 @@
 require 'attr_protected'
 
-module Depository
+module Bank
   class Model
     class << self
       attr_protected :_fields, :_defaults

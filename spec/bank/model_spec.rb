@@ -1,8 +1,8 @@
-require 'depository/model'
+require 'bank/model'
 
-describe Depository::Model do
+describe Bank::Model do
   let(:model_class) do
-    Class.new(Depository::Model) { fields :name, :age }
+    Class.new(Bank::Model) { fields :name, :age }
   end
 
   it "has a list of fields" do

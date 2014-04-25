@@ -1,4 +1,4 @@
-module Depository
+module Bank
   module Serialize
     def self.pack(*args)
       Packer.new(*args).call
@@ -51,7 +51,7 @@ module Depository
       end
 
       def columns
-        @columns ||= Depository::Database.db.schema(config.db)
+        @columns ||= Database.db.schema(config.db)
       end
     end
 
@@ -93,7 +93,7 @@ module Depository
       end
 
       def columns
-        @columns ||= Depository::Database.db.schema(config.db)
+        @columns ||= Database.db.schema(config.db)
       end
     end
 
