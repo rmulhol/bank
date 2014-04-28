@@ -1,134 +1,100 @@
 # Bank
 
-Bank is an attempt at making database
-abstractions seem more real than they are in raw
-[Sequel](http://sequel.jeremyevans.net),
-without going too far and using a full-on ActiveRecord-style
-ORM. This just encapsulates a few of the use-cases I seem
-to re-create time and time again when using Sequel.
+Bank is an experimental attempt at wrapping [Sequel](http://sequel.jeremyevans.net)
+with a simple data-mapping layer, without going all the way into a full-on,
+ActiveRecord-like ORM.
 
-Currently just experimental. Advantages?
-* run tests in-memory with SQLite for speed
-* *excellent* query interface courtesy of [Sequel](http://sequel.jeremyevans.net)
-* separate persistence/querying of data from application-level behavior
+Currently plays nice with [Data Objects](https://github.com/datamapper/do) backends.
 
-## A Simple Example
-*Collections* represent the interface of persistence to your app.
-They save and retrieve *Model* objects, which are simple
-data-structures that wrap query results.
+For a quick-start example, check out the acceptance specs.
+
+## Collections
+
+Collections represent the interface to your datastore. You might think of them as
+"repositories." A collection will save a model and query for it as well. Collections
+wrap the [Sequel query interface](http://sequel.jeremyevans.net/rdoc/files/doc/querying_rdoc.html)
+to lazily build up dataset results, only executing the query and returning a result
+when it is necessary.
 
 ```ruby
-db = Sequel.sqlite # requires 'sqlite3' gem, not included
-Bank::Database.use_db(db)
+class UsersCollection
+  extend Bank::Collection
 
-db.create_table(:books) do
-  primary_key :id
+  config.model { User }
+  config.db    { :users }
 
-  String :title
-  Integer :author_id
-end
-
-class Book < Bank::Model
-  fields :id, :title, :author_id
-end
-
-class BooksCollection < Bank::Collection
-  config.model { MyModel }
-  config.db :books  # points to 'books' table created above
-
-  def self.by_author(author)
-    where(:author_id => author.id)
+  def self.find_by_email(email)
+    where(:email => email)
   end
 end
 
-book = Book.new(:title => 'Book!', :author_id => author.id)
-
-BooksCollection.save(book)
-BooksCollection.find(book.id) == book        # => true
-
-BooksCollection.for_author(author) == [book] # => true
 ```
 
-## Databases
-Bank uses a top-level database singleton. You pass it a Sequel DB object,
-and any collections are scoped to that database. See the
-[Sequel Docs](http://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html)
-for more info on creating database connections.
+Apart from the Sequel query methods, Collections implement the following methods as syntactic sugar:
+* `save` persist (either an `INSERT` or `UPDATE` operation) the given model
+* `find` look up a single record by primary key
+* `find_by` look up a single record by the given key and value
+* `create` initialize and save a model with the given attributes
+* `delete` delete the record with the given primary key
+* `update` look up a record with the given primary key, which is passed into a block and
+  saved after the block has finished executing.
 
 ```ruby
-Bank::Database.use_db(Sequel.sqlite)
-
-# query the `books' table directly
-Bank::Database[:books]
+MyCollection.update(key) { |model| model.name = "new-name" }
 ```
 
-## Collections
-Collections represent the interface to persistence. They wrap
-[Sequel datasets](http://sequel.jeremyevans.net/rdoc/files/doc/dataset_basics_rdoc.html),
-which lazily construct queries, and then convert the queries to the configured
-model class when the query is evaluated. Collections implement most everything a
-Sequel dataset does, plus they contain support for Enumerable.
+Collection results implement the Enumerable interface, and so respond to
+`map`,`each`, etc., just as you'd expect an array to respond.
 
-Beyond that, Collections basically implement only 3 methods:
-* `save(model)` - persist a new or existing record to the database
-* `find(primary_key)` - fetch a record from the database
-* `delete(primary_key)` -  remove a record from the database
+### Configuration
 
-### Configuring Collections
-Collections are configured with a top-level dataset object, under which all
-collection queries are scoped. You can also provide a symbol with the
-name of a table, and the Collection will use the corresponding dataset by default.
+* `db` can be a symbol that points to a table in your database schema,
+  or a `Sequel::Dataset` that represents a scoped set of results.
+* `model` is the model class that Bank will serialize your results to.
+  Defaults to `Hash`
+* `primary_key` is the column Bank will use to look up results. Defaults to `:id`
 
-```ruby
-class MyCollection < Bank::Collection
-  # use a Sequel dataset directly
-  config.db Bank::Database[:books]
+### Scopes
+WIP. The idea is that scopes are chain-able, user-defined, small bits of queries.
+It doesn't work yet, so don't use 'em yet.
 
-  # equivalent: pass a symbol
-  config.db :books
+### Serialization
+Collections can be configured to serialize and deserialize data with the use of
+`packer` and `unpacker` objects. Simply, these objects must respond to `call`,
+and take a single argument: the hash of attributes. They can be defined as a simple
+lambda, or as a more advanced user-defined object if necessary.
 
-  # use a Sequel dataset with a constraint
-  config.db Bank::Database[:books].where(:archived => false)
-end
-```
+Packers and unpackers are evaluated prior to model conversion.
 
-You can specify a primary_key, which is defaulted to `:id`
-```ruby
-class MyCollection < Bank::Collection
-  config.primary_key :key
-end
-```
-
-Lastly, you can set a model class that the collection will use
-for conversion of results.
+Example: serializing and deserializing a hash from JSON.
 
 ```ruby
-class MyCollection < Bank::Collection
-  config.model { MyModel }
+class AuditsCollection
+  extend Bank::Collection
+
+  config.packer   ->(attrs) { attrs[:a_hash] = attrs[:a_hash].to_json }
+  config.unpacker ->(attrs) { attrs[:a_hash] = JSON.parse(attrs[:a_hash]) }
 end
 ```
 
 ## Models
-Models represent single records returned from a query. They are configured
-with a list of fields that correspond to table columns.
+
+Models are simple data structures that serve to represent entities in your
+datastore.
+
+### Configuration
+
+Models have a few configuration options:
+* `fields` defines the list of columns that are returned from the database
+* `defaults` defines a hash of default values for a given field (if a default
+  is not provided, the "default" value is `nil`, as is for most instance variables)
 
 ```ruby
-class Person < Bank::Model
-  fields :id, :name, :age
+class User
+  include Bank::Model
 
-  defaults :age => 42
+  config.fields :first_name, :last_name, :email, :age
+  config.defaults :age => 42
+
 end
-
-# build a Person object in memory
-bob = Person.new(:name => "Bob")
-bob.name # => "Bob"
-bob.age  # => 42
-
-# get and set attributes conveniently
-bob.get(:name) # => "Bob"
-bob.set(:name, "JimBob")
-bob.get(:name) # => "JimBob"
-
-# represent Bob as a hash
-bob.to_hash  # => { :id => 1, :name => "JimBob", :age => 42 }
 ```

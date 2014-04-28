@@ -1,0 +1,9 @@
+SCOPES:
+ - chainability
+ - definition DSL (sorta done)
+
+COLLECTIONS:
+ - use Hash as result type if no model is defined
+ - use Sequel dataset as DB for pre-scoped collections
+ - allow for multiple serializers
+

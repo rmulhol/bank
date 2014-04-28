@@ -1,12 +1,17 @@
 require 'bank/model'
 
 describe Bank::Model do
+
   let(:model_class) do
-    Class.new(Bank::Model) { fields :name, :age }
+    Class.new {
+      include Bank::Model
+
+      config.fields :name, :age
+    }
   end
 
   it "has a list of fields" do
-    model_class._fields.should == [:name, :age]
+    model_class.config._fields.should == [:name, :age]
   end
 
   it "sets attributes passed in on instantiation" do
@@ -49,7 +54,8 @@ describe Bank::Model do
   end
 
   it "defines default values" do
-    model_class.defaults(:name => "default-name")
+    model_class.config.defaults(:name => "default-name")
     model_class.new(:age => 42).name.should == "default-name"
   end
+
 end

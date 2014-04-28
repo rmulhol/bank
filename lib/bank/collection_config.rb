@@ -1,25 +1,24 @@
 require 'attr_protected'
-require 'bank/database'
 
 module Bank
   class CollectionConfig
-    attr_protected :_model_block
-    attr_writer :packer, :unpacker
+    attr_protected :_model_block, :_packers, :_unpackers
+
+    IDENTITY = ->(i) { i }
 
     def model(&block)
-      if block_given?
-        self._model_block = block
-      else
-        @_model ||= _model_block.call
-      end
+      block_given? ? self._model_block = block : @_model ||= _model_block.call
     end
 
-    def packer
-      @packer ||= identity
+    def packer(blk)   packers << blk   end
+    def unpacker(blk) unpackers << blk end
+
+    def packers
+      @_packers ||= Bank.config.default_packers
     end
 
-    def unpacker
-      @unpacker ||= identity
+    def unpackers
+      @_unpackers ||= Bank.config.default_unpackers
     end
 
     def db(&block)
@@ -28,22 +27,20 @@ module Bank
         @_db = nil
       else
         value = @_db_block.call
-        @_db ||= value.is_a?(Symbol) ? Database[value] : value
+        @_db ||= value.is_a?(Symbol) ? Bank[value] : value
       end
     end
 
     def primary_key(value = nil)
-      if value
-        @_primary_key = value
-      else
-        @_primary_key ||= :id
-      end
+      value ?  @_primary_key = value : @_primary_key ||= :id
     end
 
-  private
+    def columns
+      @_columns ||= Bank.db.schema(db)
+    end
 
-    def identity
-      ->(i) { i }
+    def columns_of_type(type)
+      columns.select { |col, opts| opts[:type] == type }
     end
   end
 end

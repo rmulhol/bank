@@ -11,7 +11,7 @@ module Bank
     attr_protected :db, :collection
 
     def_delegators :db, *[:update, :insert, :delete, :max, :min, :count]
-    def_delegators :all, :inspect, :empty?
+    def_delegators :all, :inspect, :empty?, :==, :eql?
 
     def initialize(db, collection)
       self.db = db
@@ -41,15 +41,6 @@ module Bank
 
     def respond_to?(method)
       DatasetMethods.include?(method) || super
-    end
-
-    def ==(other)
-      self.all == other
-    end
-    alias_method :eql?, :==
-
-    def inspect
-      all.inspect
     end
 
   private

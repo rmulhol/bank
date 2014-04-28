@@ -1,25 +1,26 @@
 require 'sequel/core'
 require 'yaml'
 
-require 'bank/database'
-require 'bank/collection'
-require 'bank/model'
+require 'bank'
 
-describe Bank::Collection do
-  model = Class.new(Bank::Model) {
-    fields :name, :age, :id, :hash, :created_at, :updated_at
-    defaults :hash => {}
-  }
+describe Bank, "Acceptance" do
+  model = Class.new do
+    include Bank::Model
 
-  db = Sequel.connect('do:sqlite3::memory:')
+    config.fields :name, :age, :id, :verified, :hash, :created_at, :updated_at
+    config.defaults :hash => {}
+  end
 
   before(:all) do
+    db = Sequel.connect('do:sqlite3::memory:')
+
     db.create_table :people do
       primary_key :id
 
       String :name
       String :hash, :text => true
       Integer :age
+      Boolean :verified
 
       DateTime :created_at
       DateTime :updated_at
@@ -36,27 +37,29 @@ describe Bank::Collection do
       Integer :pet_id
     end
 
-    Bank::Database.use_db(db)
+    Bank.use_db(db)
   end
 
   let(:collection) {
-    Class.new(Bank::Collection) do
+    Class.new do
+      extend Bank::Collection
+
       config.db { :people }
       config.model { model }
       config.primary_key :id
 
-      config.packer = ->(attrs) {
+      config.packer ->(attrs, config) {
         attrs[:hash] = YAML.dump(attrs.fetch(:hash, {}))
       }
 
-      config.unpacker = ->(attrs) {
+      config.unpacker ->(attrs, config) {
         attrs[:hash] = YAML.load(attrs.fetch(:hash, ""))
       }
     end
   }
 
   before do
-    [:people, :pets, :people_pets].each { |table| db[table].delete }
+    [:people, :pets, :people_pets].each { |table| Bank.db[table].delete }
   end
 
   describe "save" do
@@ -115,7 +118,7 @@ describe Bank::Collection do
 
     it "can use a scoped dataset as db" do
       unscoped_model = collection.save(model.new(:name => "another-name"))
-      collection.config.db { Bank::Database[:people].where(:name => "a-name") }
+      collection.config.db { Bank[:people].where(:name => "a-name") }
 
       saved_model = collection.save(model.new(:name => "a-name"))
 
@@ -164,9 +167,9 @@ describe Bank::Collection do
     end
 
     it "#raw gives a list/hashes result (skip conversion, e.g. for joins)" do
-      pet_id = db[:pets].insert(:name => "Doggie")
+      pet_id = Bank.db[:pets].insert(:name => "Doggie")
 
-      db[:people_pets].insert(
+      Bank.db[:people_pets].insert(
         :person_id => saved_model.id,
         :pet_id => pet_id
       )
@@ -182,15 +185,6 @@ describe Bank::Collection do
       result[:name].should     == saved_model.name
       result[:age].should      == saved_model.age
       result[:pet_name].should == "Doggie"
-    end
-  end
-
-  describe "scope" do
-    it "creates a method on the collection" do
-      person = collection.create(:age => 42)
-      collection.scope :aged, ->(age) { where(:age => age) }
-
-      collection.aged(42).should == [person]
     end
   end
 
@@ -234,5 +228,14 @@ describe Bank::Collection do
       saved = collection.create(:hash => { :one => 'two' })
       collection.find(saved.id).hash.should == { :one => 'two' }
     end
+
+    it "converts booleans" do
+      falsey = collection.create(:verified => false)
+      collection.find(falsey.id).verified.should be_false
+
+      truthy = collection.create(:verified => true)
+      collection.find(truthy.id).verified.should be_true
+    end
+
   end
 end
