@@ -39,19 +39,25 @@ module Bank
       def normalize(attrs)
         attrs = attrs.dup
 
-        columns.select { |column, opts|
-          !attrs[column].nil? && opts[:type] == :integer
-        }.each { |column, opts| attrs[column] = attrs[column].to_i }
+        of_type(attrs, :integer).each { |column, opts|
+          attrs[column] = attrs[column].to_i
+        }
 
-        columns.select { |column, opts|
-          !attrs[column].nil? && opts[:type] == :boolean
-        }.each { |column, opts| attrs[column] = attrs[column] ? 1 : 0 }
+        of_type(attrs, :boolean).each { |column, opts|
+          attrs[column] = attrs[column] ? 1 : 0
+        }
 
         attrs
       end
 
+      def of_type(attrs, type)
+        columns.select { |column, opts|
+          !attrs[column].nil? && opts[:type] == type
+        }
+      end
+
       def columns
-        @columns ||= Database.db.schema(config.db)
+        @columns ||= Bank.db.schema(config.db)
       end
     end
 
@@ -64,28 +70,28 @@ module Bank
       end
 
       def call
-        columns.select { |column, opts|
-          opts[:type] == :datetime && ![nil, 0].include?(attrs[column])
-        }.each { |column, opts| attrs[column] = drop_usecs(attrs[column]) }
-
-        columns.select { |column, opts|
-          opts[:type] == :date && ![nil, 0].include?(attrs[column])
-        }.each { |column, opts|
-          attrs[column] = Date.parse(attrs[column]) if attrs[column].is_a?(String)
+        of_type(:datetime).each { |column, _|
+          attrs[column] = drop_usecs(attrs[column])
         }
 
-        columns.select { |column, opts|
-          !attrs[column].nil? && opts[:type] == :boolean
-        }.each { |column, opts| attrs[column] = [1, true].include?(attrs[column]) }
+        of_type(:date).each { |col, _|
+          attrs[col] = Date.parse(attrs[col]) if attrs[col].is_a?(String)
+        }
+
+        columns.select { |col, opts|
+          !attrs[col].nil? && opts[:type] == :boolean
+        }.each { |col, opts| attrs[col] = [1, true].include?(attrs[col]) }
 
         config.unpacker.call(attrs)
+
         attrs
       end
 
       def drop_usecs(time)
-        if time.is_a?(String)
+        case time
+        when String
           Time.at(Time.parse(time).to_i)
-        elsif time.is_a?(DateTime)
+        when DateTime
           Time.at(time.to_time.to_i)
         else
           Time.at(time.to_i)
@@ -93,7 +99,13 @@ module Bank
       end
 
       def columns
-        @columns ||= Database.db.schema(config.db)
+        @columns ||= Bank.db.schema(config.db)
+      end
+
+      def of_type(type)
+        columns.select { |col, opts|
+          opts[:type] == type && ![nil, 0].include?(attrs[col])
+        }
       end
     end
 

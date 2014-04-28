@@ -25,7 +25,7 @@ module Bank
 
     def initialize(attrs = {})
       set(attrs)
-      _defaults.each { |key, val| set(key, val) if !get(key) }
+      _defaults.reject { |key, _| get(key) }.each { |key, val| set(key, val) }
     end
 
     def to_hash

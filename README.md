@@ -56,10 +56,10 @@ and any collections are scoped to that database. See the
 for more info on creating database connections.
 
 ```ruby
-Bank::Database.use_db(Sequel.sqlite)
+Bank.use_db(Sequel.sqlite)
 
 # query the `books' table directly
-Bank::Database[:books]
+Bank[:books]
 ```
 
 ## Collections

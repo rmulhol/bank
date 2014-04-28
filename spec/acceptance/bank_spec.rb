@@ -1,11 +1,9 @@
 require 'sequel/core'
 require 'yaml'
 
-require 'bank/database'
-require 'bank/collection'
-require 'bank/model'
+require 'bank'
 
-describe Bank::Collection do
+describe Bank, "Acceptance" do
   model = Class.new(Bank::Model) {
     fields :name, :age, :id, :hash, :created_at, :updated_at
     defaults :hash => {}
@@ -36,7 +34,7 @@ describe Bank::Collection do
       Integer :pet_id
     end
 
-    Bank::Database.use_db(db)
+    Bank.use_db(db)
   end
 
   let(:collection) {
@@ -115,7 +113,7 @@ describe Bank::Collection do
 
     it "can use a scoped dataset as db" do
       unscoped_model = collection.save(model.new(:name => "another-name"))
-      collection.config.db { Bank::Database[:people].where(:name => "a-name") }
+      collection.config.db { Bank[:people].where(:name => "a-name") }
 
       saved_model = collection.save(model.new(:name => "a-name"))
 

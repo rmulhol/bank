@@ -1,6 +1,7 @@
 require 'bank/model'
 
 describe Bank::Model do
+
   let(:model_class) do
     Class.new(Bank::Model) { fields :name, :age }
   end
