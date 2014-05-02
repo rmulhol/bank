@@ -19,7 +19,7 @@ data-structures that wrap query results.
 
 ```ruby
 db = Sequel.sqlite # requires 'sqlite3' gem, not included
-Bank::Database.use_db(db)
+Bank.use_db(db)
 
 db.create_table(:books) do
   primary_key :id
@@ -82,13 +82,13 @@ name of a table, and the Collection will use the corresponding dataset by defaul
 ```ruby
 class MyCollection < Bank::Collection
   # use a Sequel dataset directly
-  config.db Bank::Database[:books]
+  config.db Bank[:books]
 
   # equivalent: pass a symbol
   config.db :books
 
   # use a Sequel dataset with a constraint
-  config.db Bank::Database[:books].where(:archived => false)
+  config.db Bank[:books].where(:archived => false)
 end
 ```
 
