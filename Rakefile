@@ -2,12 +2,12 @@ require 'rspec/core/rake_task'
 
 task :default => [:spec]
 
-desc "Runs the tests"
+desc "Run tests"
 task :spec do
   RSpec::Core::RakeTask.new { |t| t.verbose = false }
 end
 
-task "Clean up generated gem sources."
+desc "Clean generated gem files."
 task :clean do
   FileUtils.rm Dir.glob("*.gem")
 end
