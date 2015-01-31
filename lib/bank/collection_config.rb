@@ -1,5 +1,4 @@
 require 'attr_protected'
-require 'bank'
 
 module Bank
   class CollectionConfig
