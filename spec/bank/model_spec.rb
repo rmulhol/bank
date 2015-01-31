@@ -11,37 +11,37 @@ describe Bank::Model do
   end
 
   it "has a list of fields" do
-    model_class.config._fields.should == [:name, :age]
+    expect(model_class.config._fields).to eq [:name, :age]
   end
 
   it "sets attributes passed in on instantiation" do
-    model_class.new(:name => "name").name.should == "name"
+    expect(model_class.new(:name => "name").name).to eq "name"
   end
 
   it "#get gets an attribute" do
-    model_class.new(:name => "name").get(:name).should == "name"
+    expect(model_class.new(:name => "name").get(:name)).to eq "name"
   end
 
   it "#set sets an attribute" do
     person = model_class.new(:name => "name")
     person.set(:name, "new-name")
-    person.name.should == "new-name"
+    expect(person.name).to eq "new-name"
   end
 
   it "#set with a hash sets many attributes" do
     person = model_class.new(:name => "name")
     person.set(:name => "new-name", :age => 365)
 
-    person.name.should == "new-name"
-    person.age.should == 365
+    expect(person.name).to eq "new-name"
+    expect(person.age).to eq 365
   end
 
   it "#to_hash exports attributes to hash" do
     person = model_class.new(:name => "name", :age => 42)
-    person.to_hash.should == {
+    expect(person.to_hash).to eq(
       :name => "name",
       :age => 42
-    }
+    )
   end
 
   it "is equal to other objects of the same type with the same attributes" do
@@ -49,13 +49,13 @@ describe Bank::Model do
     person2 = model_class.new(:name => "name", :age => 42)
     diff_person = model_class.new(:name => "diff-name", :age => 42)
 
-    person1.should     == person2
-    person1.should_not == diff_person
+    expect(person1).to eq person2
+    expect(person1).not_to eq diff_person
   end
 
   it "defines default values" do
     model_class.config.defaults(:name => "default-name")
-    model_class.new(:age => 42).name.should == "default-name"
+    expect(model_class.new(:age => 42).name).to eq "default-name"
   end
 
 end

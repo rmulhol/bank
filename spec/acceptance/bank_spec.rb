@@ -65,15 +65,15 @@ describe Bank, "Acceptance" do
   describe "save" do
     it "saves a new model" do
       saved_model = collection.save(model.new(:name => "a-name"))
-      saved_model.id.should_not be_nil
-      saved_model.hash.should == {}
+      expect(saved_model.id).not_to be_nil
+      expect(saved_model.hash).to eq({})
     end
 
     it "coerces string params to integers if need be" do
       saved_model = collection.create(:age => "50")
 
-      saved_model.age.should be_a(Integer)
-      saved_model.age.should == 50
+      expect(saved_model.age).to be_a(Integer)
+      expect(saved_model.age).to eq 50
     end
 
     it "sets a created_at on create" do
@@ -81,7 +81,7 @@ describe Bank, "Acceptance" do
       Time.stub(:now) { now }
 
       saved_model = collection.create(:name => "a-name")
-      saved_model.created_at.should == now
+      expect(saved_model.created_at).to eq now
     end
 
     it "saves a previously saved model" do
@@ -92,7 +92,7 @@ describe Bank, "Acceptance" do
         collection.save(saved_model)
       }.not_to change { collection.count }
 
-      collection.find(saved_model.id).name.should == "new-name"
+      expect(collection.find(saved_model.id).name).to eq "new-name"
     end
 
     it "sets updated_at on save" do
@@ -100,12 +100,12 @@ describe Bank, "Acceptance" do
       Time.stub(:now) { now }
 
       saved_model = collection.create(:name => "a-name")
-      saved_model.created_at.should == now
+      expect(saved_model.created_at).to eq now
 
       saved_model.name = "new-name"
       collection.save(saved_model)
 
-      saved_model.updated_at.should == now
+      expect(saved_model.updated_at).to eq now
     end
   end
 
@@ -113,7 +113,7 @@ describe Bank, "Acceptance" do
     it "uses the db set in the config" do
       mock_db = double.as_null_object
       collection.config.db { mock_db }
-      collection.config.db.should == mock_db
+      expect(collection.config.db).to eq mock_db
     end
 
     it "can use a scoped dataset as db" do
@@ -122,7 +122,7 @@ describe Bank, "Acceptance" do
 
       saved_model = collection.save(model.new(:name => "a-name"))
 
-      collection.find(saved_model.id).should == saved_model
+      expect(collection.find(saved_model.id)).to eq saved_model
 
       expect {
         collection.find(unscoped_model.id)
@@ -154,16 +154,16 @@ describe Bank, "Acceptance" do
     end
 
     it "WHERE clauses" do
-      collection.where(:name => saved_model2.name).should == [saved_model2]
+      expect(collection.where(:name => saved_model2.name)).to eq [saved_model2]
 
-      collection.where(:name => saved_model2.name).
-        where(:age => 22).should == [saved_model2]
+      expect(collection.where(:name => saved_model2.name).
+        where(:age => 22)).to eq [saved_model2]
     end
 
     it "contains (most) enumerable methods (minus select, group_by, grep)" do
-      collection.where(:name => "a-name").map(&:name).should == ["a-name"]
-      collection.where(:name => "a-name").reduce(0) { |age, p| age += p.age }.
-        should == 42
+      expect(collection.where(:name => "a-name").map(&:name)).to eq ["a-name"]
+      expect(collection.where(:name => "a-name").reduce(0) { |age, p| age += p.age }).
+        to eq 42
     end
 
     it "#raw gives a list/hashes result (skip conversion, e.g. for joins)" do
@@ -182,9 +182,9 @@ describe Bank, "Acceptance" do
         raw.
         first
 
-      result[:name].should     == saved_model.name
-      result[:age].should      == saved_model.age
-      result[:pet_name].should == "Doggie"
+      expect(result[:name]).to     eq saved_model.name
+      expect(result[:age]).to      eq saved_model.age
+      expect(result[:pet_name]).to eq "Doggie"
     end
   end
 
@@ -193,7 +193,7 @@ describe Bank, "Acceptance" do
       person = collection.create(:name => "name")
       person2 = collection.create(:name => "name")
 
-      collection.find_by(:name, "name").should == person
+      expect(collection.find_by(:name, "name")).to eq person
     end
   end
 
@@ -215,26 +215,26 @@ describe Bank, "Acceptance" do
     it "updates the correct model" do
       saved = collection.create(:name => "first-name")
       collection.update(saved.id) do |model|
-        model.should == saved
+        model.should eq saved
         model.name = "second-name"
       end
 
-      collection.find(saved.id).name.should == "second-name"
+      expect(collection.find(saved.id).name).to eq "second-name"
     end
   end
 
   describe "packer" do
     it "packs/unpacks models before save/after load" do
       saved = collection.create(:hash => { :one => 'two' })
-      collection.find(saved.id).hash.should == { :one => 'two' }
+      expect(collection.find(saved.id).hash).to eq :one => 'two'
     end
 
     it "converts booleans" do
       falsey = collection.create(:verified => false)
-      collection.find(falsey.id).verified.should be_false
+      expect(collection.find(falsey.id).verified).to be_falsey
 
       truthy = collection.create(:verified => true)
-      collection.find(truthy.id).verified.should be_true
+      expect(collection.find(truthy.id).verified).to be_truthy
     end
 
   end
