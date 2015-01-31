@@ -1,7 +1,7 @@
 require 'sequel/core'
 require 'yaml'
 
-require 'bank'
+require 'bank/bank'
 
 describe Bank, "Acceptance" do
   model = Class.new do

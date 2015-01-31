@@ -1,6 +1,6 @@
 require 'rubygems/package_task'
 
-VERSION     = "0.1.12"
+VERSION     = "0.1.13"
 
 spec = Gem::Specification.new do |s|
   s.name         = "bank"
