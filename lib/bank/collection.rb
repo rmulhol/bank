@@ -26,6 +26,10 @@ module Bank
       Result.new(config.db, self)
     end
 
+    def scope(name, blk)
+        define_singleton_method(name) { |*args| instance_exec *args, &blk }
+    end
+
     def find_by(key, value)
       where(key => value).first
     end
@@ -80,11 +84,9 @@ module Bank
     end
 
     def join_select(table, *args, &blk)
-      select(*config.model._fields.map { |f| :"#{table}__#{f}"}).
+      select(*config.model.config._fields.map { |f| :"#{table}__#{f}"}).
         join(*args, &blk)
     end
-
-  private
 
     def new?(model)
       model.send(config.primary_key).nil?

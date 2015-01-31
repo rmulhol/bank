@@ -37,6 +37,8 @@ module Bank
       config.columns_of_type(:datetime).each { |column, opts|
         time = attrs[column]
         attrs[column] = case time
+                        when NilClass
+                          nil
                         when String
                           Time.at(Time.parse(time).to_i)
                         when DateTime
