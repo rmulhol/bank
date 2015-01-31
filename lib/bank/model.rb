@@ -1,7 +1,7 @@
 require 'attr_protected'
 
 module Bank
-  module Model
+  class Model
     class Config
       attr_protected :_fields, :_defaults, :_model
 
