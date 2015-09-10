@@ -40,11 +40,11 @@ module Bank
                         when NilClass
                           nil
                         when String
-                          Time.at(Time.parse(time).to_i)
+                          Time.at(Time.parse(time).to_i).utc
                         when DateTime
-                          Time.at(time.to_time.to_i)
+                          Time.at(time.to_time.to_i).utc
                         else
-                          Time.at(time.to_i)
+                          Time.at(time.to_i).utc
                         end
       }
     end
