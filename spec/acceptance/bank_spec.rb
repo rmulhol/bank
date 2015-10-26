@@ -76,6 +76,33 @@ describe Bank, "Acceptance" do
       expect(saved_model.age).to eq 50
     end
 
+    describe "coerces params to booleans if need be" do
+      def expect_verified_to_be_false(value)
+        saved_model = collection.create(:verified => value)
+        expect(saved_model.verified).to be_false
+      end
+
+      it "with false string" do
+        expect_verified_to_be_false("false")
+      end
+
+      it "with nil string" do
+        expect_verified_to_be_false("nil")
+      end
+
+      it "with zero string" do
+        expect_verified_to_be_false("0")
+      end
+
+      it "with nil" do
+        expect_verified_to_be_false(nil)
+      end
+
+      it "with 0" do
+        expect_verified_to_be_false(0)
+      end
+    end
+
     it "sets a created_at on create" do
       now = Time.at(Time.now.to_i)
       Time.stub(:now) { now }
@@ -231,10 +258,10 @@ describe Bank, "Acceptance" do
 
     it "converts booleans" do
       falsey = collection.create(:verified => false)
-      expect(collection.find(falsey.id).verified).to be_falsey
+      expect(collection.find(falsey.id).verified).to be_false
 
       truthy = collection.create(:verified => true)
-      expect(collection.find(truthy.id).verified).to be_truthy
+      expect(collection.find(truthy.id).verified).to be_true
     end
 
   end

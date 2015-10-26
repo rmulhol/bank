@@ -29,7 +29,9 @@ module Bank
 
     PackBooleans = ->(attrs, config) do
       config.columns_of_type(:boolean).each { |column, opts|
-        attrs[column] = attrs[column] ? 1 : 0
+        false_values = [false, nil, 0, 'false', 'nil', '0']
+        value = !false_values.include?(attrs[column])
+        attrs[column] = value ? 1 : 0
       }
     end
 
